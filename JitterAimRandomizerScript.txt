@@ -1,0 +1,50 @@
+local timer = 0
+local move_up = false
+local num_of_shots = 0
+local data_collection_period = 3 * 24 * 60 * 60 -- 3 days in seconds
+local usage_threshold = 6 * 60 * 60 -- 6 hours in seconds
+local total_usage = 0
+local usage_days = 0
+
+function OnEvent(event, arg)
+    if (event == "PROFILE_ACTIVATED") then
+        EnablePrimaryMouseButtonEvents(true)
+    end
+    if IsKeyLockOn("numlock") then
+        if (event == "MOUSE_BUTTON_PRESSED" and arg == 1) then
+            if IsMouseButtonPressed(3) then
+                repeat
+                    if move_up then
+                        MoveMouseRelative(0, -10)
+                    else
+                        MoveMouseRelative(-10, 0)
+                        Sleep(10)
+                        MoveMouseRelative(10, 0)
+                    end
+                    Sleep(10)
+                    timer = timer + 0.01
+                    num_of_shots = num_of_shots + 1
+                until not IsMouseButtonPressed(1)
+                if total_usage >= usage_threshold and usage_days >= 2 then
+                    if num_of_shots > 0 and num_of_shots % 20 == 0 then
+                        move_up = true
+                    else
+                        move_up = false
+                    end
+                else
+                    move_up = false
+                end
+                timer = 0
+                num_of_shots = 0
+            end
+        end
+    end
+    total_usage = total_usage + 1
+    if total_usage >= usage_threshold then
+        usage_days = usage_days + 1
+        total_usage = 0
+    end
+    if usage_days >= 2 then
+        usage_threshold = usage_threshold * 2 -- increase the threshold
+    end
+end
